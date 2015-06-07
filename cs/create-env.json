@@ -1,0 +1,94 @@
+{
+  "jpsType": "install",
+  "jpsVersion":"0.3",
+  "application": {
+    "name": "Elastx Wordpress",
+    "description":"Simple, yet high performant Wordpress site",
+    "settings": {
+      "fields": [{
+        "type": "string",
+        "name": "wp_password",
+        "caption": "Wordpress Password",
+        "required": "true",
+      }]
+    },
+    "env": {
+      "topology": {
+        "engine": "php5.6",
+        "nodes": [{
+            "nodeType": "nginxphp",
+            "count": 1,
+            "cloudlets": 16
+          },{
+            "nodeType": "mariadb10",
+            "extip": false,
+            "cloudlets": 16
+          }
+        ]
+      }
+    },
+    "onInstall": {
+      "call": [
+        "installWPCli",
+        "downloadWP",
+        "installWP",
+        "installWPPlugins"
+      ]
+    },
+    "procedures": [{
+      "id": "installWPCli",
+      "onCall": [{
+        "executeShellCommands": [{
+          "nodeMission": "cp",
+          "commands": [
+            "cd /var/www/webroot/ROOT",
+            "rm -rf index.php",
+            "cd /var/lib/nginx",
+            "mkdir bin",
+            "cd bin",
+            "curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar",
+            "mv wp-cli.phar wp",
+            "chmod +x wp",
+            "echo \"export PATH=$PATH:/var/lib/nginx/bin\" >>/var/lib/nginx/.bash_profile",
+          ]
+        }]
+      }]
+    },{
+      "id": "downloadWP",
+      "onCall": [{
+        "executeShellCommands": [{
+          "nodeMission": "cp",
+          "commands": [
+            "cd /var/www/webroot/ROOT",
+            "/var/lib/nginx/bin/wp core download 2>&1 >/dev/null",
+          ]
+        }]
+      }]
+    },{
+      "id": "installWP",
+      "onCall": [{
+        "executeShellCommands": [{
+          "nodeMission": "cp",
+          "commands": [
+            "mysql -uroot -p${nodes.sqldb.password} -h${nodes.sqldb[0].address} -e \"CREATE DATABASE wordpress;GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@'%' IDENTIFIED BY '${nodes.sqldb.password}';\" 2>&1 >/dev/null",
+            "cd /var/www/webroot/ROOT",
+            "/var/lib/nginx/bin/wp core config --dbname=wordpress --dbuser=wordpress --dbpass=${nodes.sqldb.password} --dbhost=${nodes.sqldb[0].address} --locale=sv_SE 2>&1 >/dev/null",
+            "/var/lib/nginx/bin/wp core install --url=${env.domain} --title=\"Wordpress on Elastx\" --admin_user=admin --admin_password=${settings.wp_password} --admin_email=\"${user.email}\" 2>&1 >/dev/null",
+          ]
+        }]
+      }]
+    },{
+      "id": "installWPPlugins",
+      "onCall": [{
+        "executeShellCommands": [{
+          "nodeMission": "cp",
+          "commands": [
+            "cd /var/www/webroot/ROOT",
+            "/var/lib/nginx/bin/wp plugin install w3-total-cache --activate"
+          ]
+        }]
+      }]
+    }],
+    "success": "You can now manage your Wordpress site at <a href='${env.protocol}://${env.domain}/wp-admin/' target='_blank'>${env.protocol}://${env.domain}/wp-admin/</a> with username \"admin\" and password \"${settings.wp_password}\""
+  }
+}
