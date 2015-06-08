@@ -4,15 +4,25 @@
   "application": {
     "name": "Elastx Wordpress",
     "version": "1.0",
-    "logo": "https://raw.githubusercontent.com/elastx/wordpress-hp/master/img/wordpress-logo-notext-rgb.png?token=AAraqDPHFmA1jbPaKvCixnFvYpgNuKTzks5VfhmywA%3D%3D",
+    "logo": "https://raw.githubusercontent.com/elastx/wordpress-hp/master/img/wordpress-logo-notext-rgb.png?token=AAraqCDDg59T1Lzz7g-nt1Ux6TTCgJVIks5VfhqPwA%3D%3D",
     "homepage": "https://github.com/elastx/wordpress-hp",
     "description":"Simple, yet high performant Wordpress site",
     "type": "php",
     "settings": {
-      "fields": [{
+      "fields": [{      
+        "type": "string",
+        "name": "wp_admin",
+        "caption": "Set username",
+        "required": "true",
+      },{
         "type": "string",
         "name": "wp_password",
-        "caption": "Wordpress Password",
+        "caption": "Set password",
+        "required": "true",
+      },{
+        "type": "string",
+        "name": "wp_email",
+        "caption": "Set admin e-mail",
         "required": "true",
       }]
     },
@@ -78,7 +88,7 @@
             "mysql -uroot -p${nodes.sqldb.password} -h${nodes.sqldb[0].address} -e \"CREATE DATABASE wordpress;GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@'%' IDENTIFIED BY '${nodes.sqldb.password}';\" 2>&1 >/dev/null",
             "cd /var/www/webroot/ROOT",
             "/var/lib/nginx/bin/wp core config --dbname=wordpress --dbuser=wordpress --dbpass=${nodes.sqldb.password} --dbhost=${nodes.sqldb[0].address} --locale=sv_SE 2>&1 >/dev/null",
-            "/var/lib/nginx/bin/wp core install --url=${env.domain} --title=\"Wordpress on Elastx\" --admin_user=admin --admin_password=${settings.wp_password} --admin_email=\"${user.email}\" 2>&1 >/dev/null",
+            "/var/lib/nginx/bin/wp core install --url=${env.domain} --title=\"Wordpress on Elastx\" --admin_user=${settings.wp_admin} --admin_password=${settings.wp_password} --admin_email=\"${settings.wp_email}\" 2>&1 >/dev/null",
           ]
         }]
       }]
