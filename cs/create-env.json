@@ -4,6 +4,7 @@
   "application": {
     "name": "Elastx Wordpress",
     "version": "1.0",
+    "logo": "https://raw.githubusercontent.com/elastx/wordpress-hp/master/img/wordpress-logo-notext-rgb.png?token=AAraqDPHFmA1jbPaKvCixnFvYpgNuKTzks5VfhmywA%3D%3D",
     "homepage": "https://github.com/elastx/wordpress-hp",
     "description":"Simple, yet high performant Wordpress site",
     "type": "php",
