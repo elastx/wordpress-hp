@@ -3,7 +3,10 @@
   "jpsVersion":"0.3",
   "application": {
     "name": "Elastx Wordpress",
+    "version": "1.0",
+    "homepage": "https://github.com/elastx/wordpress-hp",
     "description":"Simple, yet high performant Wordpress site",
+    "type": "php",
     "settings": {
       "fields": [{
         "type": "string",
@@ -32,7 +35,8 @@
         "installWPCli",
         "downloadWP",
         "installWP",
-        "installWPPlugins"
+        "installWPPlugins",
+        "configureNginx"
       ]
     },
     "procedures": [{
@@ -86,6 +90,20 @@
             "cd /var/www/webroot/ROOT",
             "/var/lib/nginx/bin/wp plugin install w3-total-cache --activate"
           ]
+        }]
+      }]
+    },{
+      "id": "configureNginx",
+      "onCall": [{
+        "executeShellCommands": [{
+          "nodeMission": "cp",
+          "commands": [
+            "curl -fs https://raw.githubusercontent.com/elastx/wordpress-hp/master/conf/nginx/nginx.conf.tpl?token=AAraqDQW9tixs0BD55CEZi1OUzw5vwdBks5VfhOfwA%3D%3D | sed 's/__DOMAIN/${env.domain}/' > /etc/nginx/nginx.conf",
+          ]
+        }]
+      }, {
+        "restartNodes": [{
+          "nodeMission": "cp"
         }]
       }]
     }],
