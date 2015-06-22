@@ -141,6 +141,6 @@
         }]
       }]
     }],
-    "success": "You can now manage your Wordpress site at <a href='${env.protocol}://${env.domain}/wp-admin/' target='_blank'>${env.protocol}://${env.domain}/wp-admin/</a> with username \"${settings.wp_admin}\" and password \"${settings.wp_password}\""
+    "success": "You can now manage your Wordpress site at <a href='${env.protocol}://${env.domain}/wp-admin/' style='color: #f7d600; text-decoration: none;' target='_blank'>${env.protocol}://${env.domain}/wp-admin/</a> with username \"${settings.wp_admin}\" and password \"${settings.wp_password}\""
   }
 }
