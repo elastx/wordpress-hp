@@ -1,30 +1,31 @@
 {
   "jpsType": "install",
-  "jpsVersion":"0.3",
+  "jpsVersion": "0.3",
   "application": {
     "name": "Elastx Wordpress",
     "version": "1.0",
     "logo": "https://raw.githubusercontent.com/elastx/wordpress-hp/master/img/wordpress-logo-notext-rgb.png",
     "homepage": "https://github.com/elastx/wordpress-hp",
-    "description":"Simple, yet high performant Wordpress site",
+    "description": "Simple, yet high performant Wordpress site",
     "type": "php",
     "settings": {
-      "fields": [{      
-        "type": "string",
-        "name": "wp_admin",
-        "caption": "Set username",
-        "required": "true",
-      },{
-        "type": "string",
-        "name": "wp_password",
-        "caption": "Set password",
-        "required": "true",
-      },{
-        "type": "string",
-        "name": "wp_email",
-        "caption": "Set admin e-mail",
-        "required": "true",
-      }]
+      "fields": [{
+          "type": "string",
+          "name": "wp_admin",
+          "caption": "Set username",
+          "required": "true"
+        }, {
+          "type": "string",
+          "name": "wp_password",
+          "caption": "Set password",
+          "required": "true"
+        }, {
+          "type": "string",
+          "name": "wp_email",
+          "caption": "Set admin e-mail",
+          "required": "true"
+        }
+      ]
     },
     "env": {
       "topology": {
@@ -33,7 +34,7 @@
             "nodeType": "nginxphp",
             "count": 1,
             "cloudlets": 16
-          },{
+          }, {
             "nodeType": "mariadb10",
             "extip": false,
             "cloudlets": 16
@@ -43,104 +44,118 @@
     },
     "onInstall": {
       "call": [
-        "installWPCli",
-        "downloadWP",
-        "installWP",
-        "installWPPlugins",
-        "configureNginx"
+          "installWPCli",
+          "downloadWP",
+          "installWP",
+          "installWPPlugins",
+          "configureNginx"
       ]
     },
     "procedures": [{
-      "id": "installWPCli",
-      "onCall": [{
-        "executeShellCommands": [{
-          "nodeMission": "cp",
-          "commands": [
-            "cd /var/www/webroot/ROOT",
-            "rm -rf index.php",
-            "cd /var/lib/nginx",
-            "mkdir bin",
-            "cd bin",
-            "curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar",
-            "mv wp-cli.phar wp",
-            "chmod +x wp",
-            "echo \"export PATH=$PATH:/var/lib/nginx/bin\" >>/var/lib/nginx/.bash_profile",
-          ]
-        }]
-      }]
-    },{
-      "id": "downloadWP",
-      "onCall": [{
-        "executeShellCommands": [{
-          "nodeMission": "cp",
-          "commands": [
-            "cd /var/www/webroot/ROOT",
-            "/var/lib/nginx/bin/wp core download 2>&1 >/dev/null",
-          ]
-        }]
-      }]
-    },{
-      "id": "installWP",
-      "onCall": [{
-        "executeShellCommands": [{
-          "nodeMission": "cp",
-          "commands": [
-            "mysql -uroot -p${nodes.sqldb.password} -h${nodes.sqldb[0].address} -e \"CREATE DATABASE wordpress;GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@'%' IDENTIFIED BY '${nodes.sqldb.password}';\" 2>&1 >/dev/null",
-            "cd /var/www/webroot/ROOT",
-            "/var/lib/nginx/bin/wp core config --dbname=wordpress --dbuser=wordpress --dbpass=${nodes.sqldb.password} --dbhost=${nodes.sqldb[0].address} --locale=sv_SE 2>&1 >/dev/null",
-            "/var/lib/nginx/bin/wp core install --url=${env.domain} --title=\"Wordpress on Elastx\" --admin_user=${settings.wp_admin} --admin_password=${settings.wp_password} --admin_email=\"${settings.wp_email}\" 2>&1 >/dev/null",
-            "/var/lib/nginx/bin/wp option update blogdescription \"A simple, yet performant, Wordpress site\""
-          ]
-        }]
-      }]
-    },{
-      "id": "installWPPlugins",
-      "onCall": [{
-        "executeShellCommands": [{
-          "nodeMission": "cp",
-          "commands": [
-            "cd /var/www/webroot/ROOT",
-            "/var/lib/nginx/bin/wp plugin install w3-total-cache --activate",
-            "/var/lib/nginx/bin/wp theme install hannari hannari-blue --activate"
-          ]
-        }]
-      }]
-    },{
-      "id": "configureNginx",
-      "onCall": [{
-        "executeShellCommands": [{
-          "nodeMission": "cp",
-          "commands": [
-            "curl -fs https://raw.githubusercontent.com/elastx/wordpress-hp/master/conf/nginx/nginx.conf.tpl | sed 's/__DOMAIN/${env.domain}/' > /etc/nginx/nginx.conf",
-          ]
-        }]
+        "id": "installWPCli",
+        "onCall": [{
+            "executeShellCommands": [{
+                "nodeMission": "cp",
+                "commands": [
+                    "cd /var/www/webroot/ROOT",
+                    "rm -rf index.php",
+                    "cd /var/lib/nginx",
+                    "mkdir bin",
+                    "cd bin",
+                    "curl -sO https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar",
+                    "mv wp-cli.phar wp",
+                    "chmod +x wp",
+                    "echo \"export PATH=$PATH:/var/lib/nginx/bin\" >>/var/lib/nginx/.bash_profile"
+                ]
+              }
+            ]
+          }
+        ]
       }, {
-        "replaceInFile": [{
-          "nodeMission": "cp",
-          "path": "/etc/php.ini",
-          "replacements": [{
-            "pattern": "xcache.size = \"32M\"",
-            "replacement": "xcache.size = \"64M\""
-          }, {
-            "pattern": "; extension = xcache.so",
-            "replacement": "extension = xcache.so"
-          }, {
-            "pattern": "upload_max_filesize = 2M",
-            "replacement": "upload_max_filesize = 20M"
-          }, {
-            "pattern": "post_max_size = 8M",
-            "replacement": "post_max_size = 20M"
-          }, {
-            "pattern": ";extension=gd.so",
-            "replacement":"extension=gd.so"
-          }]
-        }]
+        "id": "downloadWP",
+        "onCall": [{
+            "executeShellCommands": [{
+                "nodeMission": "cp",
+                "commands": [
+                    "cd /var/www/webroot/ROOT",
+                    "/var/lib/nginx/bin/wp core download 2>&1 >/dev/null"
+                ]
+              }
+            ]
+          }
+        ]
       }, {
-        "restartNodes": [{
-          "nodeMission": "cp"
-        }]
-      }]
-    }],
+        "id": "installWP",
+        "onCall": [{
+            "executeShellCommands": [{
+                "nodeMission": "cp",
+                "commands": [
+                    "mysql -uroot -p${nodes.sqldb.password} -h${nodes.sqldb[0].address} -e \"CREATE DATABASE wordpress;GRANT ALL PRIVILEGES ON wordpress.* TO root@'%' IDENTIFIED BY '${nodes.sqldb.password}';\" 2>&1 >/dev/null",
+                    "cd /var/www/webroot/ROOT",
+                    "/var/lib/nginx/bin/wp core config --dbname=wordpress --dbuser=root --dbpass=${nodes.sqldb.password} --dbhost=${nodes.sqldb[0].address} --locale=sv_SE 2>&1 >/dev/null",
+                    "/var/lib/nginx/bin/wp core install --url=${env.domain} --title=\"Wordpress on Elastx\" --admin_user=${settings.wp_admin} --admin_password=${settings.wp_password} --admin_email=\"${settings.wp_email}\" 2>&1 >/dev/null",
+                    "/var/lib/nginx/bin/wp option update blogdescription \"A simple, yet performant, Wordpress site\""
+                ]
+              }
+            ]
+          }
+        ]
+      }, {
+        "id": "installWPPlugins",
+        "onCall": [{
+            "executeShellCommands": [{
+                "nodeMission": "cp",
+                "commands": [
+                    "cd /var/www/webroot/ROOT",
+                    "/var/lib/nginx/bin/wp plugin install w3-total-cache --activate",
+                    "/var/lib/nginx/bin/wp theme install hannari hannari-blue --activate"
+                ]
+              }
+            ]
+          }
+        ]
+      }, {
+        "id": "configureNginx",
+        "onCall": [{
+            "executeShellCommands": [{
+                "nodeMission": "cp",
+                "commands": [
+                    "curl -fs https://raw.githubusercontent.com/elastx/wordpress-hp/master/conf/nginx/nginx.conf.tpl | sed 's/__DOMAIN/${env.domain}/' > /etc/nginx/nginx.conf"
+                ]
+              }
+            ]
+          }, {
+            "replaceInFile": [{
+                "nodeMission": "cp",
+                "path": "/etc/php.ini",
+                "replacements": [{
+                    "pattern": "xcache.size = \"32M\"",
+                    "replacement": "xcache.size = \"64M\""
+                  }, {
+                    "pattern": "; extension = xcache.so",
+                    "replacement": "extension = xcache.so"
+                  }, {
+                    "pattern": "upload_max_filesize = 2M",
+                    "replacement": "upload_max_filesize = 20M"
+                  }, {
+                    "pattern": "post_max_size = 8M",
+                    "replacement": "post_max_size = 20M"
+                  }, {
+                    "pattern": ";extension=gd.so",
+                    "replacement": "extension=gd.so"
+                  }
+                ]
+              }
+            ]
+          }, {
+            "restartNodes": [{
+                "nodeMission": "cp"
+              }
+            ]
+          }
+        ]
+      }
+    ],
     "success": "You can now manage your Wordpress site at <a href='${env.protocol}://${env.domain}/wp-admin/' style='color: #f7d600; text-decoration: none;' target='_blank'>${env.protocol}://${env.domain}/wp-admin/</a> with username \"${settings.wp_admin}\" and password \"${settings.wp_password}\""
   }
 }
