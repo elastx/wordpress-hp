@@ -29,7 +29,7 @@
     },
     "env": {
       "topology": {
-        "engine": "php5.6",
+        "engine": "php7.0",
         "nodes": [{
             "nodeType": "nginxphp",
             "count": 1,
@@ -129,11 +129,8 @@
                 "nodeMission": "cp",
                 "path": "/etc/php.ini",
                 "replacements": [{
-                    "pattern": "xcache.size = \"32M\"",
-                    "replacement": "xcache.size = \"64M\""
-                  }, {
-                    "pattern": "; extension = xcache.so",
-                    "replacement": "extension = xcache.so"
+                    "pattern": "; zend_extension=/usr/lib64/php/modules/opcache.so",
+                    "replacement": "zend_extension=/usr/lib64/php/modules/opcache.so"
                   }, {
                     "pattern": "upload_max_filesize = 2M",
                     "replacement": "upload_max_filesize = 20M"
